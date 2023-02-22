@@ -14,6 +14,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
