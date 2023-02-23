@@ -2,20 +2,20 @@ const User = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.send({ data: users }))
+    .then((users) => res.send(users))
     .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные' });
@@ -36,7 +36,7 @@ module.exports.updateProfile = (req, res) => {
       upsert: false,
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
@@ -61,7 +61,7 @@ module.exports.updateAvatar = (req, res) => {
       upsert: false,
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });

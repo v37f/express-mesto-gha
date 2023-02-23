@@ -2,14 +2,16 @@ const Card = require('../models/card');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.send({ data: cards }))
+    .populate(['owner', 'likes'])
+    .then((cards) => res.send(cards))
     .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send({ data: card }))
+    .then((card) => card.populate('owner'))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные' });
@@ -21,7 +23,7 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({ data: card }))
+    .then(() => res.send({ message: 'Пост удалён' }))
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(404).send({ message: 'Карточка не найдена' });
@@ -37,7 +39,8 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
+    .populate(['owner', 'likes'])
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(404).send({ message: 'Карточка не найдена' });
@@ -53,6 +56,7 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .populate(['owner', 'likes'])
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'CastError') {
