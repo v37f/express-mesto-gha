@@ -3,20 +3,32 @@ const Card = require('../models/card');
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({ message: 'Переданы некорректные данные' });
+        return;
+      }
+      res.status(500).send({ message: 'Что-то пошло не так...' });
+    });
 };
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(404).send({ message: 'Карточка не найдена' });
+        return;
+      }
+      res.status(500).send({ message: 'Что-то пошло не так...' });
+    });
 };
 
 module.exports.likeCard = (req, res) => {
@@ -26,7 +38,13 @@ module.exports.likeCard = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(404).send({ message: 'Карточка не найдена' });
+        return;
+      }
+      res.status(500).send({ message: 'Что-то пошло не так...' });
+    });
 };
 
 module.exports.dislikeCard = (req, res) => {
@@ -36,5 +54,11 @@ module.exports.dislikeCard = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(404).send({ message: 'Карточка не найдена' });
+        return;
+      }
+      res.status(500).send({ message: 'Что-то пошло не так...' });
+    });
 };
