@@ -18,7 +18,7 @@ module.exports.getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Неправильный формат _id' });
+        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
         return;
       }
       if (err.name === 'NotFoundError') {
@@ -65,7 +65,7 @@ module.exports.updateProfile = (req, res) => {
         return;
       }
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Неправильный формат _id' });
+        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
         return;
       }
       if (err.name === 'NotFoundError') {
@@ -99,7 +99,7 @@ module.exports.updateAvatar = (req, res) => {
         return;
       }
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Неправильный формат _id' });
+        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
         return;
       }
       if (err.name === 'NotFoundError') {
