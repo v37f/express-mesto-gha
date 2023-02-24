@@ -1,3 +1,5 @@
+const NotFoundError = require('../errors/NotFoundError');
+
 const Card = require('../models/card');
 
 module.exports.getCards = (req, res) => {
@@ -23,10 +25,19 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then(() => res.send({ message: 'Пост удалён' }))
+    .then((card) => {
+      if (!card) {
+        return Promise.reject(new NotFoundError('Карточка не найдена'));
+      }
+      return res.send({ message: 'Пост удалён' });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Карточка не найдена' });
+        res.status(400).send({ message: 'Неправильный формат _id карточки' });
+        return;
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
         return;
       }
       res.status(500).send({ message: 'Что-то пошло не так...' });
@@ -40,15 +51,25 @@ module.exports.likeCard = (req, res) => {
     { new: true },
   )
     .populate(['owner', 'likes'])
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        return Promise.reject(new NotFoundError('Карточка не найдена'));
+      }
+      return res.send(card);
+    })
     .catch((err) => {
-      console.log(err);
       if (err.name === 'CastError') {
         if (err.path === 'likes') {
-          res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+          res.status(400).send({ message: 'Передан некорректный _id пользователя' });
           return;
         }
-        res.status(404).send({ message: 'Карточка не найдена' });
+        if (err.path === '_id') {
+          res.status(400).send({ message: 'Передан некорректный _id карточки' });
+          return;
+        }
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
         return;
       }
       res.status(500).send({ message: 'Что-то пошло не так...' });
@@ -62,15 +83,25 @@ module.exports.dislikeCard = (req, res) => {
     { new: true },
   )
     .populate(['owner', 'likes'])
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        return Promise.reject(new NotFoundError('Карточка не найдена'));
+      }
+      return res.send(card);
+    })
     .catch((err) => {
-      console.log(err);
       if (err.name === 'CastError') {
         if (err.path === 'likes') {
-          res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+          res.status(400).send({ message: 'Передан некорректный _id пользователя' });
           return;
         }
-        res.status(404).send({ message: 'Карточка не найдена' });
+        if (err.path === '_id') {
+          res.status(400).send({ message: 'Передан некорректный _id карточки' });
+          return;
+        }
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
         return;
       }
       res.status(500).send({ message: 'Что-то пошло не так...' });
