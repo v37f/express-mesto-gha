@@ -42,7 +42,12 @@ module.exports.likeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
+      console.log(err);
       if (err.name === 'CastError') {
+        if (err.path === 'likes') {
+          res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+          return;
+        }
         res.status(404).send({ message: 'Карточка не найдена' });
         return;
       }
@@ -57,9 +62,14 @@ module.exports.dislikeCard = (req, res) => {
     { new: true },
   )
     .populate(['owner', 'likes'])
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.send(card))
     .catch((err) => {
+      console.log(err);
       if (err.name === 'CastError') {
+        if (err.path === 'likes') {
+          res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+          return;
+        }
         res.status(404).send({ message: 'Карточка не найдена' });
         return;
       }

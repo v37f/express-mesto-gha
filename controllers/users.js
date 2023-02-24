@@ -1,3 +1,5 @@
+const NotFoundError = require('../errors/NotFoundError');
+
 const User = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
@@ -8,8 +10,23 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.send(user))
-    .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
+      }
+      return res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Неправильный формат _id' });
+        return;
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
+        return;
+      }
+      res.status(500).send({ message: 'Что-то пошло не так...' });
+    });
 };
 
 module.exports.createUser = (req, res) => {
@@ -36,14 +53,23 @@ module.exports.updateProfile = (req, res) => {
       upsert: false,
     },
   )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
       }
+      return res.send(user);
+    })
+    .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Неправильный формат _id' });
+        return;
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
         return;
       }
       res.status(500).send({ message: 'Что-то пошло не так...' });
@@ -61,14 +87,23 @@ module.exports.updateAvatar = (req, res) => {
       upsert: false,
     },
   )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
       }
+      return res.send(user);
+    })
+    .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Неправильный формат _id' });
+        return;
+      }
+      if (err.name === 'NotFoundError') {
+        res.status(err.statusCode).send({ message: err.message });
         return;
       }
       res.status(500).send({ message: 'Что-то пошло не так...' });
