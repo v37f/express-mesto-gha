@@ -32,7 +32,15 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send(
+          {
+            /* Получаем массив ключей объекта ошибок валидации err.errors,
+               берем первый ключ из данного массива и получаем по нему сообщение
+               об ошибке из объекта ошибок валидации
+            */
+            message: err.errors[Object.keys(err.errors)[0]].message,
+          },
+        );
         return;
       }
       res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
@@ -59,7 +67,11 @@ module.exports.updateProfile = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send(
+          {
+            message: err.errors[Object.keys(err.errors)[0]].message,
+          },
+        );
         return;
       }
       if (err.name === 'CastError') {
@@ -90,7 +102,11 @@ module.exports.updateAvatar = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send(
+          {
+            message: err.errors[Object.keys(err.errors)[0]].message,
+          },
+        );
         return;
       }
       if (err.name === 'CastError') {
