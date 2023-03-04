@@ -1,31 +1,28 @@
-const NotFoundError = require('../errors/NotFoundError');
+const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
 const User = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
+    .catch(() => res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
       }
-      return res.send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользователя' });
         return;
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -35,10 +32,10 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
         return;
       }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -55,24 +52,21 @@ module.exports.updateProfile = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
       }
-      return res.send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
         return;
       }
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользлователя' });
         return;
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -89,23 +83,20 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return Promise.reject(new NotFoundError('Запрашиваемый пользователь не найден'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
       }
-      return res.send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
         return;
       }
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Некорректный формат _id пользлователя' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользлователя' });
         return;
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
