@@ -16,14 +16,11 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        // создаем массив сообщений ошибок валидации
-        const errorMessages = [];
-        // проходим по объекту ошибок и записываем в массив все сообщения
-        Object.keys(err.errors).forEach((key) => {
-          errorMessages.push(err.errors[key].message);
-        });
-        // в ответ посылаем первое сообщение из массива сооющений ошибок
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: errorMessages[0] });
+        res.status(BAD_REQUEST_STATUS_CODE).send(
+          {
+            message: err.errors[Object.keys(err.errors)[0]].message,
+          },
+        );
         return;
       }
       res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
