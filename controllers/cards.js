@@ -18,7 +18,7 @@ module.exports.createCard = (req, res) => {
       if (err.name === 'ValidationError') {
         // создаем массив сообщений ошибок валидации
         const errorMessages = [];
-        // проходим по объекту ошибку и записываем в массив все сообщения
+        // проходим по объекту ошибок и записываем в массив все сообщения
         Object.keys(err.errors).forEach((key) => {
           errorMessages.push(err.errors[key].message);
         });
