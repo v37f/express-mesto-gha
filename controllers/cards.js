@@ -1,4 +1,4 @@
-const NotFoundError = require('../errors/NotFoundError');
+const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
 const Card = require('../models/card');
 
@@ -6,7 +6,7 @@ module.exports.getCards = (req, res) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => res.send(cards))
-    .catch(() => res.status(500).send({ message: 'Что-то пошло не так...' }));
+    .catch(() => res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' }));
 };
 
 module.exports.createCard = (req, res) => {
@@ -16,10 +16,10 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
         return;
       }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -27,20 +27,17 @@ module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        return Promise.reject(new NotFoundError('Карточка не найдена'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
+        return;
       }
-      return res.send({ message: 'Пост удалён' });
+      res.send({ message: 'Пост удалён' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Неправильный формат _id карточки' });
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Неправильный формат _id карточки' });
         return;
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -53,26 +50,23 @@ module.exports.likeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        return Promise.reject(new NotFoundError('Карточка не найдена'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
+        return;
       }
-      return res.send(card);
+      res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         if (err.path === 'likes') {
-          res.status(400).send({ message: 'Передан некорректный _id пользователя' });
+          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id пользователя' });
           return;
         }
         if (err.path === '_id') {
-          res.status(400).send({ message: 'Передан некорректный _id карточки' });
+          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id карточки' });
           return;
         }
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
 
@@ -85,25 +79,22 @@ module.exports.dislikeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        return Promise.reject(new NotFoundError('Карточка не найдена'));
+        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
+        return;
       }
-      return res.send(card);
+      res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         if (err.path === 'likes') {
-          res.status(400).send({ message: 'Передан некорректный _id пользователя' });
+          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id пользователя' });
           return;
         }
         if (err.path === '_id') {
-          res.status(400).send({ message: 'Передан некорректный _id карточки' });
+          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id карточки' });
           return;
         }
       }
-      if (err.name === 'NotFoundError') {
-        res.status(err.statusCode).send({ message: err.message });
-        return;
-      }
-      res.status(500).send({ message: 'Что-то пошло не так...' });
+      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
 };
