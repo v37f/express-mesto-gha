@@ -16,7 +16,14 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Переданы некорректные данные' });
+        // создаем массив сообщений ошибок валидации
+        const errorMessages = [];
+        // проходим по объекту ошибку и записываем в массив все сообщения
+        Object.keys(err.errors).forEach((key) => {
+          errorMessages.push(err.errors[key].message);
+        });
+        // в ответ посылаем первое сообщение из массива сооющений ошибок
+        res.status(BAD_REQUEST_STATUS_CODE).send({ message: errorMessages[0] });
         return;
       }
       res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
