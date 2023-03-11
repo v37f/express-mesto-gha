@@ -66,7 +66,7 @@ module.exports.createUser = (req, res) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
   User
-    .findOne({ email })
+    .findOne({ email }).select('+password')
     .orFail(() => res.status(401).send({ message: 'Неправильная почта или пароль' }))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
