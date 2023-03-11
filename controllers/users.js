@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
 const User = require('../models/user');
@@ -27,17 +29,26 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    email,
+    password,
+    name,
+    about,
+    avatar,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((passwordHash) => User.create({
+      email,
+      password: passwordHash,
+      name,
+      about,
+      avatar,
+    }))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST_STATUS_CODE).send(
           {
-            /* Получаем массив ключей объекта ошибок валидации err.errors,
-               берем первый ключ из данного массива и получаем по нему сообщение
-               об ошибке из объекта ошибок валидации
-            */
             message: err.errors[Object.keys(err.errors)[0]].message,
           },
         );
