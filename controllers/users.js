@@ -5,12 +5,14 @@ const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_COD
 
 const User = require('../models/user');
 
+// GET /users
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
     .catch(() => res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' }));
 };
 
+// GET /users/:userId
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
@@ -29,6 +31,7 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
+// POST /signup
 module.exports.createUser = (req, res) => {
   const {
     email,
@@ -59,6 +62,7 @@ module.exports.createUser = (req, res) => {
     });
 };
 
+// POST /signin
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
   User
@@ -80,6 +84,17 @@ module.exports.login = (req, res) => {
     .catch((err) => console.log(err));
 };
 
+// GET /users/me
+module.exports.getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .orFail(() => res.status(404).send({ message: 'Пользователь не найден' }))
+    .then((user) => res.send(user))
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+// PATCH /users/me
 module.exports.updateProfile = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
@@ -115,6 +130,7 @@ module.exports.updateProfile = (req, res) => {
     });
 };
 
+// PATCH /users/me/avatar
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
