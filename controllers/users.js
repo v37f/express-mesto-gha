@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jsonwebtoken = require('jsonwebtoken');
 
 const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
@@ -56,6 +57,27 @@ module.exports.createUser = (req, res) => {
       }
       res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
     });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User
+    .findOne({ email })
+    .orFail(() => res.status(401).send({ message: 'Неправильная почта или пароль' }))
+    .then((user) => bcrypt.compare(password, user.password).then((matched) => {
+      if (matched) {
+        return user;
+      }
+      return res.status(401).send({ message: 'Неправильная почта или пароль' });
+    }))
+    .then((user) => {
+      const jwt = jsonwebtoken.sign({ _id: user._id }, 'JWT_SECRET', { expiresIn: '7d' });
+      res.cookie('jwt', jwt, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      }).end();
+    })
+    .catch((err) => console.log(err));
 };
 
 module.exports.updateProfile = (req, res) => {
