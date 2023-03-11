@@ -1,4 +1,9 @@
-const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
+const {
+  BAD_REQUEST_STATUS_CODE,
+  NOT_FOUND_STATUS_CODE,
+  DEFAULT_ERROR_STATUS_CODE,
+  FORBIDDEN_STATUS_CODE,
+} = require('../utils/constants');
 
 const Card = require('../models/card');
 
@@ -28,13 +33,18 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
         return;
       }
-      res.send({ message: 'Пост удалён' });
+      if (card.owner._id.toString() !== req.user._id) {
+        res.status(FORBIDDEN_STATUS_CODE).send({ message: 'Нельзя удалить чужую карточку' });
+        return;
+      }
+      Card.findByIdAndRemove(req.params.cardId)
+        .then(() => res.send({ message: 'Пост удалён' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
