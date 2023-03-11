@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
-
+const { JWT_SECRET } = require('../config');
 const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
 const User = require('../models/user');
@@ -71,7 +71,7 @@ module.exports.login = (req, res) => {
       return res.status(401).send({ message: 'Неправильная почта или пароль' });
     }))
     .then((user) => {
-      const jwt = jsonwebtoken.sign({ _id: user._id }, 'JWT_SECRET', { expiresIn: '7d' });
+      const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('jwt', jwt, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,

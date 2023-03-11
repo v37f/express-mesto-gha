@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { createUser, login } = require('./controllers/users');
 const { NOT_FOUND_STATUS_CODE } = require('./utils/constants');
-
-const { PORT = 3000 } = process.env;
+const { auth } = require('./middlewares/auth');
+const { PORT, DB_ADDRESS } = require('./config');
 
 const app = express();
 app.use(bodyParser.json());
@@ -15,16 +16,16 @@ app.use((req, res, next) => {
   };
   next();
 });
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
 app.post('/signin', login);
 app.post('/signup', createUser);
+app.use(auth);
+app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
 
 app.use('*', (req, res) => {
   res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Страница не найдена' });
 });
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect(DB_ADDRESS);
 
 app.listen(PORT);
