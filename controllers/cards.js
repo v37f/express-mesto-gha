@@ -1,61 +1,43 @@
-const {
-  BAD_REQUEST_STATUS_CODE,
-  NOT_FOUND_STATUS_CODE,
-  DEFAULT_ERROR_STATUS_CODE,
-  FORBIDDEN_STATUS_CODE,
-} = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-error');
+const ForbiddenError = require('../errors/forbidden-error');
 
 const Card = require('../models/card');
 
-module.exports.getCards = (req, res) => {
+// GET /cards
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => res.send(cards))
-    .catch(() => res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' }));
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+// POST /cards
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => card.populate('owner'))
     .then((card) => res.send(card))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send(
-          {
-            message: err.errors[Object.keys(err.errors)[0]].message,
-          },
-        );
-        return;
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
 
-module.exports.deleteCard = (req, res) => {
+// DELETE /cards/:cardId
+module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
-        return;
+        throw new NotFoundError('Карточка не найдена');
       }
       if (card.owner._id.toString() !== req.user._id) {
-        res.status(FORBIDDEN_STATUS_CODE).send({ message: 'Нельзя удалить чужую карточку' });
-        return;
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       }
       Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send({ message: 'Пост удалён' }));
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Неправильный формат _id карточки' });
-        return;
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
 
-module.exports.likeCard = (req, res) => {
+// PUT /cards/:cardId/likes
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -64,27 +46,15 @@ module.exports.likeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
-        return;
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send(card);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        if (err.path === 'likes') {
-          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id пользователя' });
-          return;
-        }
-        if (err.path === '_id') {
-          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id карточки' });
-          return;
-        }
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
 
-module.exports.dislikeCard = (req, res) => {
+// DELETE /cards/:cardId/likes
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -93,22 +63,9 @@ module.exports.dislikeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (!card) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка не найдена' });
-        return;
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send(card);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        if (err.path === 'likes') {
-          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id пользователя' });
-          return;
-        }
-        if (err.path === '_id') {
-          res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Передан некорректный _id карточки' });
-          return;
-        }
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };

@@ -1,38 +1,33 @@
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
+const NotFoundError = require('../errors/not-found-error');
+const UnauthorizedError = require('../errors/unauthorized-error');
+const ConflictError = require('../errors/conflict-error');
 const { JWT_SECRET } = require('../config');
-const { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE, DEFAULT_ERROR_STATUS_CODE } = require('../utils/constants');
 
 const User = require('../models/user');
 
 // GET /users
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' }));
+    .catch(next);
 };
 
 // GET /users/:userId
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользователя' });
-        return;
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
 
 // POST /signup
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     email,
     password,
@@ -50,29 +45,25 @@ module.exports.createUser = (req, res) => {
     }))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send(
-          {
-            message: err.errors[Object.keys(err.errors)[0]].message,
-          },
-        );
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
         return;
       }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
+      next(err);
     });
 };
 
 // POST /signin
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   User
     .findOne({ email }).select('+password')
-    .orFail(() => res.status(401).send({ message: 'Неправильная почта или пароль' }))
+    .orFail(() => { throw new UnauthorizedError('Неправильная почта или пароль'); })
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;
       }
-      return res.status(401).send({ message: 'Неправильная почта или пароль' });
+      throw new UnauthorizedError('Неправильная почта или пароль');
     }))
     .then((user) => {
       const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
@@ -81,21 +72,19 @@ module.exports.login = (req, res) => {
         httpOnly: true,
       }).end();
     })
-    .catch((err) => console.log(err));
+    .catch(next);
 };
 
 // GET /users/me
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(() => res.status(404).send({ message: 'Пользователь не найден' }))
+    .orFail(() => { throw new UnauthorizedError('Пользователь не найден'); })
     .then((user) => res.send(user))
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(next);
 };
 
 // PATCH /users/me
-module.exports.updateProfile = (req, res) => {
+module.exports.updateProfile = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -108,30 +97,15 @@ module.exports.updateProfile = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send(
-          {
-            message: err.errors[Object.keys(err.errors)[0]].message,
-          },
-        );
-        return;
-      }
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользлователя' });
-        return;
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
 
 // PATCH /users/me/avatar
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -144,24 +118,9 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send(
-          {
-            message: err.errors[Object.keys(err.errors)[0]].message,
-          },
-        );
-        return;
-      }
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Некорректный формат _id пользлователя' });
-        return;
-      }
-      res.status(DEFAULT_ERROR_STATUS_CODE).send({ message: 'Что-то пошло не так...' });
-    });
+    .catch(next);
 };
