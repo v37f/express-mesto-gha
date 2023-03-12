@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
 const NotFoundError = require('../errors/not-found-error');
+const BadRequestError = require('../errors/bad-request-error');
 const UnauthorizedError = require('../errors/unauthorized-error');
 const ConflictError = require('../errors/conflict-error');
 const { JWT_SECRET } = require('../config');
@@ -43,8 +44,17 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.status(201).send(user))
+    .then((user) => res.status(201).send({
+      email: user.email,
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+    }))
     .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(err.errors[Object.keys(err.errors)[0]].message));
+        return;
+      }
       if (err.code === 11000) {
         next(new ConflictError('Пользователь с таким email уже существует'));
         return;
@@ -123,5 +133,11 @@ module.exports.updateAvatar = (req, res, next) => {
       }
       res.send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(err.errors[Object.keys(err.errors)[0]].message));
+        return;
+      }
+      next(err);
+    });
 };

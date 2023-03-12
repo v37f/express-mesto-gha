@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
 const routes = require('./routes');
 const limiter = require('./middlewares/limiter');
 const { errorHandler } = require('./middlewares/error-handler');
@@ -16,8 +17,10 @@ app.use(limiter);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(routes);
+app.use(errors());
 app.use(errorHandler);
 
+mongoose.set('strictQuery', true);
 mongoose.connect(DB_ADDRESS);
 
 app.listen(PORT);
