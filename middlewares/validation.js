@@ -72,15 +72,6 @@ module.exports.userValidation = celebrate({
 });
 
 module.exports.validateCard = celebrate({
-  params: Joi.object().keys({
-    cardId: Joi.string()
-      .alphanum()
-      .length(24)
-      .messages({
-        'string.alphanum': 'ID карточки может содержать только латниские буквы и цифры',
-        'string.length': 'Длина ID карточки должна составлять 24 символа',
-      }),
-  }),
   body: Joi.object().keys({
     name: Joi.string()
       .min(2)
@@ -99,4 +90,16 @@ module.exports.validateCard = celebrate({
         'any.required': 'Поле `link` является обязательным',
       }),
   }).unknown(true),
+});
+
+module.exports.validateCardId = celebrate({
+  params: Joi.object().keys({
+    cardId: Joi.string()
+      .alphanum()
+      .length(24)
+      .messages({
+        'string.alphanum': 'ID карточки может содержать только латниские буквы и цифры',
+        'string.length': 'Длина ID карточки должна составлять 24 символа',
+      }),
+  }),
 });
