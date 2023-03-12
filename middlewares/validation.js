@@ -8,6 +8,7 @@ module.exports.authValidation = celebrate({
       .messages({
         'string.empty': 'Поле `email` должно быть заполнено',
         'string.email': 'Поле `email` должно содержать валидный email-адрес',
+        'any.required': 'Поле `email` является обязательным',
       }),
     password: Joi.string()
       .required()
@@ -15,6 +16,7 @@ module.exports.authValidation = celebrate({
       .messages({
         'string.empty': 'Поле `password` должно быть заполнено',
         'string.min': 'Поле `password` должно содержать минимум {#limit} символов',
+        'any.required': 'Поле `password` является обязательным',
       }),
     name: Joi.string()
       .min(2)
@@ -45,7 +47,7 @@ module.exports.userValidation = celebrate({
       .length(24)
       .messages({
         'string.alphanum': 'ID пользователя может содержать только латниские буквы и цифры',
-        'string.length': 'Длина ID пользователя должна составлять 24 символа',
+        'string.length': 'Длина ID пользователя должна составлять {#limit} символа',
       }),
   }),
   body: Joi.object().keys({
@@ -99,7 +101,7 @@ module.exports.validateCardId = celebrate({
       .length(24)
       .messages({
         'string.alphanum': 'ID карточки может содержать только латниские буквы и цифры',
-        'string.length': 'Длина ID карточки должна составлять 24 символа',
+        'string.length': 'Длина ID карточки должна составлять {#limit} символа',
       }),
   }),
 });
