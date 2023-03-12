@@ -2,24 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const { createUser, login } = require('./controllers/users');
+const routes = require('./routes');
 const { errorHandler } = require('./middlewares/error-handler');
-const { auth } = require('./middlewares/auth');
 const { PORT, DB_ADDRESS } = require('./config');
 
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-app.post('/signin', login);
-app.post('/signup', createUser);
-app.use(auth);
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Страница не найдена' });
-});
+app.use(routes);
 app.use(errorHandler);
 
 mongoose.connect(DB_ADDRESS);
