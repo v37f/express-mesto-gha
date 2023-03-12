@@ -64,9 +64,9 @@ module.exports.userValidation = celebrate({
         'string.max': 'Поле `about` должно содержать максимум {#limit} символов',
       }),
     avatar: Joi.string()
-      .uri()
+      .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
       .messages({
-        'string.uri': 'Поле `avatar` должно содержать валидный URI-адрес',
+        'string.pattern.base': 'Поле `avatar` должно содержать валидный URL-адрес',
       }),
   }).unknown(true),
 });
