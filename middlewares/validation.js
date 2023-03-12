@@ -90,9 +90,9 @@ module.exports.validateCard = celebrate({
         'string.max': 'Поле `name` должно содержать максимум {#limit} символов',
       }),
     link: Joi.string()
-      .uri()
+      .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
       .messages({
-        'string.uri': 'Поле `link` должно содержать валидный URI-адрес',
+        'string.pattern.base': 'Поле `link` должно содержать валидный URL-адрес',
       }),
   }).unknown(true),
 });
