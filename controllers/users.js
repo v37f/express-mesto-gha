@@ -93,18 +93,11 @@ module.exports.login = (req, res, next) => {
 
 // GET /users/me
 module.exports.getCurrentUser = (req, res, next) => {
-  const { authorization } = req.headers;
-
-  let jwt;
-  if (req.cookies.jwt) {
-    jwt = req.cookies.jwt;
-  } else if (authorization && authorization.startsWith('Bearer')) {
-    jwt = authorization.replace('Bearer ', '');
-  } else {
+  if (!req.cookies.jwt) {
     next(new UnauthorizedError('Необходима авторизация'));
     return;
   }
-
+  const { jwt } = req.cookies;
   let payload;
 
   try {
