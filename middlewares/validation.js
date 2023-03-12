@@ -85,14 +85,18 @@ module.exports.validateCard = celebrate({
     name: Joi.string()
       .min(2)
       .max(30)
+      .required()
       .messages({
         'string.min': 'Поле `name` должно содержать минимум {#limit} символа',
         'string.max': 'Поле `name` должно содержать максимум {#limit} символов',
+        'any.required': 'Поле `name` является обязательным',
       }),
     link: Joi.string()
       .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
+      .required()
       .messages({
         'string.pattern.base': 'Поле `link` должно содержать валидный URL-адрес',
+        'any.required': 'Поле `link` является обязательным',
       }),
   }).unknown(true),
 });
