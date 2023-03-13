@@ -93,21 +93,21 @@ module.exports.login = (req, res, next) => {
 
 // GET /users/me
 module.exports.getCurrentUser = (req, res, next) => {
-  if (!req.cookies.jwt) {
-    next(new UnauthorizedError('Необходима авторизация'));
-    return;
-  }
-  const { jwt } = req.cookies;
-  let payload;
+  // if (!req.cookies.jwt) {
+  //   next(new UnauthorizedError('Необходима авторизация'));
+  //   return;
+  // }
+  // const { jwt } = req.cookies;
+  // let payload;
 
-  try {
-    payload = jsonwebtoken.verify(jwt, JWT_SECRET);
-  } catch (err) {
-    next(new UnauthorizedError('Некорректный токен'));
-    return;
-  }
+  // try {
+  //   payload = jsonwebtoken.verify(jwt, JWT_SECRET);
+  // } catch (err) {
+  //   next(new UnauthorizedError('Некорректный токен'));
+  //   return;
+  // }
 
-  User.findById(payload._id)
+  User.findById(req.user._id)
     .orFail(() => { throw new NotFoundError('Пользователь не найден'); })
     .then((user) => res.send(user))
     .catch(next);
