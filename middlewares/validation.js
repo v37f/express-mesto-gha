@@ -1,7 +1,7 @@
 const { celebrate, Joi } = require('celebrate');
 const { URL_PATTERN } = require('../utils/constants');
 
-module.exports.authValidation = celebrate({
+module.exports.validateAuthInfo = celebrate({
   body: Joi.object().keys({
     email: Joi.string()
       .required()
@@ -38,19 +38,10 @@ module.exports.authValidation = celebrate({
       .messages({
         'string.pattern.base': 'Поле `avatar` должно содержать валидный URL-адрес',
       }),
-  }).unknown(true),
+  }),
 });
 
-module.exports.userValidation = celebrate({
-  params: Joi.object().keys({
-    userId: Joi.string()
-      .alphanum()
-      .length(24)
-      .messages({
-        'string.alphanum': 'ID пользователя может содержать только латниские буквы и цифры',
-        'string.length': 'Длина ID пользователя должна составлять {#limit} символа',
-      }),
-  }),
+module.exports.validateUserInfo = celebrate({
   body: Joi.object().keys({
     name: Joi.string()
       .min(2)
@@ -71,10 +62,22 @@ module.exports.userValidation = celebrate({
       .messages({
         'string.pattern.base': 'Поле `avatar` должно содержать валидный URL-адрес',
       }),
-  }).unknown(true),
+  }),
 });
 
-module.exports.validateCard = celebrate({
+module.exports.validateUserId = celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string()
+      .hex()
+      .length(24)
+      .messages({
+        'string.hex': 'ID карточки может содержать только латинские буквы[a-f] и цифры',
+        'string.length': 'Длина ID пользователя должна составлять {#limit} символа',
+      }),
+  }),
+});
+
+module.exports.validateCardInfo = celebrate({
   body: Joi.object().keys({
     name: Joi.string()
       .min(2)
@@ -86,22 +89,31 @@ module.exports.validateCard = celebrate({
         'any.required': 'Поле `name` является обязательным',
       }),
     link: Joi.string()
-      .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
+      .pattern(URL_PATTERN)
       .required()
       .messages({
         'string.pattern.base': 'Поле `link` должно содержать валидный URL-адрес',
         'any.required': 'Поле `link` является обязательным',
       }),
-  }).unknown(true),
+  }),
 });
 
 module.exports.validateCardId = celebrate({
   params: Joi.object().keys({
     cardId: Joi.string()
-      .alphanum()
+    // По поводу 'required', логично что параметр cardId должен быть обязательным, т.к. он
+    // необходим работы контроллера. Тем не менее, проверка 'required' не будет срабатывать
+    // (как и вся эта валидация), т.к. для этого надо обрабатывать существующие роуты
+    // (например PUT 'cards/:cardId/likes'). В случае отсутствия параметра 'cardId'
+    // мы получим несуществующий роут (например DELETE '/' или PUT 'cards//likes')
+    // у которого не будет ни валидации ни контроллера, который мы хотим уберечь
+    // от получения невалидных данных. Этот несуществующий роут будет обработан
+    // и пользователю вернется сообщение "Страница не найдена".
+    // Исходя из этого не вижу смысла добавлять 'required'.
+      .hex()
       .length(24)
       .messages({
-        'string.alphanum': 'ID карточки может содержать только латниские буквы и цифры',
+        'string.hex': 'ID карточки может содержать только латинские буквы[a-f] и цифры',
         'string.length': 'Длина ID карточки должна составлять {#limit} символа',
       }),
   }),
