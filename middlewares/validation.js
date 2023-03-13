@@ -1,4 +1,5 @@
 const { celebrate, Joi } = require('celebrate');
+const { URL_PATTERN } = require('../utils/constants');
 
 module.exports.authValidation = celebrate({
   body: Joi.object().keys({
@@ -33,7 +34,7 @@ module.exports.authValidation = celebrate({
         'string.max': 'Поле `about` должно содержать максимум {#limit} символов',
       }),
     avatar: Joi.string()
-      .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
+      .pattern(URL_PATTERN)
       .messages({
         'string.pattern.base': 'Поле `avatar` должно содержать валидный URL-адрес',
       }),
@@ -66,7 +67,7 @@ module.exports.userValidation = celebrate({
         'string.max': 'Поле `about` должно содержать максимум {#limit} символов',
       }),
     avatar: Joi.string()
-      .pattern(/https?:\/\/[a-z0-9-]+\.[a-z0-9]{2,}\/?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]*/)
+      .pattern(URL_PATTERN)
       .messages({
         'string.pattern.base': 'Поле `avatar` должно содержать валидный URL-адрес',
       }),
