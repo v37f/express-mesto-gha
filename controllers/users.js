@@ -5,7 +5,7 @@ const BadRequestError = require('../errors/bad-request-error');
 const UnauthorizedError = require('../errors/unauthorized-error');
 const ConflictError = require('../errors/conflict-error');
 const { JWT_SECRET } = require('../config');
-
+const { removePassword } = require('../utils/utils');
 const User = require('../models/user');
 
 // GET /users
@@ -44,12 +44,9 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.status(201).send({
-      email: user.email,
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-    }))
+    .then((user) => {
+      res.status(201).send(removePassword(user));
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError(err.errors[Object.keys(err.errors)[0]].message));
@@ -81,32 +78,13 @@ module.exports.login = (req, res, next) => {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
         sameSite: true,
-      }).send({
-        email: user.email,
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-      });
+      }).send(removePassword(user));
     })
     .catch(next);
 };
 
 // GET /users/me
 module.exports.getCurrentUser = (req, res, next) => {
-  // if (!req.cookies.jwt) {
-  //   next(new UnauthorizedError('Необходима авторизация'));
-  //   return;
-  // }
-  // const { jwt } = req.cookies;
-  // let payload;
-
-  // try {
-  //   payload = jsonwebtoken.verify(jwt, JWT_SECRET);
-  // } catch (err) {
-  //   next(new UnauthorizedError('Некорректный токен'));
-  //   return;
-  // }
-
   User.findById(req.user._id)
     .orFail(() => { throw new NotFoundError('Пользователь не найден'); })
     .then((user) => res.send(user))
